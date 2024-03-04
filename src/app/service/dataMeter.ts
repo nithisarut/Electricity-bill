@@ -424,9 +424,7 @@ readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
         if (!currDate.length) {
           currDate = curr.toDateString();
         }
-
         energyNomal = Number(item.energy);
-
         energy = Number(item.energy - cuEnergy);
         cuEnergy = Number(item.energy);
         if (hometype == 'TOU') {
