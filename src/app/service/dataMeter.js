@@ -5,6 +5,8 @@ var data_dayoff_1 = require("../../assets/data_dayoff");
 var fs_1 = require("fs");
 var express = require('express');
 var app = express();
+var cors = require('cors');
+app.use(cors());
 (0, fs_1.readFile)('../../assets/data_power_meter.json', 'utf8', function (err, datajson) {
     if (err) {
         console.error('เกิดข้อผิดพลาดในการอ่านไฟล์', err);
@@ -12,7 +14,7 @@ var app = express();
     }
     var jsonData = JSON.parse(datajson);
     var sd = new Date('2023-12-29 00:00:00');
-    var ed = new Date('2023-12-30 23:59:59');
+    var ed = new Date('2023-12-29 23:59:59');
     var data = jsonData;
     var metertype = 'over150';
     var hometype = 'Nomal';
@@ -67,8 +69,11 @@ var app = express();
                     currDate = curr.toDateString();
                 }
                 energyNomal = Number(item.energy);
+                console.log("energyNomal :", energyNomal);
                 energy = Number(item.energy - cuEnergy);
+                console.log("item.energy :", energyNomal, "- cuEnergy", cuEnergy, "=", energy);
                 cuEnergy = Number(item.energy);
+                console.log("cuEnergy :", cuEnergy);
                 if (hometype == 'TOU') {
                     var calc = new classMeter_1.MeterTypeTOU({
                         id: 0,
@@ -518,9 +523,9 @@ var app = express();
         // console.log('monthlyData :', monthlyData);
     }
     // getCurrentCost(data, sd, ed, metertype, hometype);
-    // getdataDayWeekMonth(data, sd, ed, metertype, hometype);
+    getdataDayWeekMonth(data, sd, ed, metertype, hometype);
     // getdataMonth(data, sd, ed, metertype, hometype);
-    // console.log('DataDayWeekMonth :', DataDayWeekMonth);
+    console.log('DataDayWeekMonth :', DataDayWeekMonth);
     app.get('/getCurrentCost', function (req, res) {
         var sd;
         var ed;
@@ -598,6 +603,4 @@ var app = express();
     app.listen(PORT, function () {
         console.log('Server is running on port ${PORT}');
     });
-    module.exports = getCurrentCost;
-    module.exports = { getdataDayWeekMonth: getdataDayWeekMonth };
 });
