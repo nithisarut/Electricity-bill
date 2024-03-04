@@ -3,6 +3,9 @@ import { DATA_HOLIDAY } from '../../assets/data_dayoff';
 import { readFile } from 'fs';
 const express = require('express');
 const app = express();
+const cors = require('cors');
+
+app.use(cors())
 readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
   if (err) {
     console.error('เกิดข้อผิดพลาดในการอ่านไฟล์', err);
@@ -12,7 +15,7 @@ readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
   const jsonData = JSON.parse(datajson);
 
   let sd = new Date('2023-12-29 00:00:00');
-  let ed = new Date('2023-12-30 23:59:59');
+  let ed = new Date('2023-12-29 23:59:59');
   let data: any[] = jsonData;
   let metertype = 'over150';
   let hometype = 'Nomal';
@@ -145,9 +148,12 @@ readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
         }
 
         energyNomal = Number(item.energy);
+        console.log("energyNomal :",energyNomal)
         energy = Number(item.energy - cuEnergy);
+        console.log("item.energy :",energyNomal,"- cuEnergy",cuEnergy,"=",energy)
       
         cuEnergy = Number(item.energy);
+        console.log("cuEnergy :",cuEnergy)
 
         if (hometype == 'TOU') {
           let calc = new MeterTypeTOU({
@@ -426,6 +432,7 @@ readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
         }
         energyNomal = Number(item.energy);
         energy = Number(item.energy - cuEnergy);
+      
         cuEnergy = Number(item.energy);
         if (hometype == 'TOU') {
           let calc = new MeterTypeTOU({
@@ -703,9 +710,9 @@ readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
     // console.log('monthlyData :', monthlyData);
   }
   // getCurrentCost(data, sd, ed, metertype, hometype);
-  // getdataDayWeekMonth(data, sd, ed, metertype, hometype);
+  getdataDayWeekMonth(data, sd, ed, metertype, hometype);
   // getdataMonth(data, sd, ed, metertype, hometype);
-  // console.log('DataDayWeekMonth :', DataDayWeekMonth);
+  console.log('DataDayWeekMonth :', DataDayWeekMonth);
   app.get('/getCurrentCost', (req: any, res: any) => {
     let sd: Date;
     let ed: Date;
@@ -791,6 +798,4 @@ readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
   app.listen(PORT, () => {
     console.log('Server is running on port ${PORT}');
   });
-  module.exports = getCurrentCost;
-  module.exports = { getdataDayWeekMonth };
 });
