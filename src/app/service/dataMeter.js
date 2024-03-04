@@ -4,17 +4,15 @@ var classMeter_1 = require("./classMeter");
 var data_dayoff_1 = require("../../assets/data_dayoff");
 var fs_1 = require("fs");
 var express = require('express');
-var cors = require('cors');
 var app = express();
-app.use(cors());
 (0, fs_1.readFile)('../../assets/data_power_meter.json', 'utf8', function (err, datajson) {
     if (err) {
         console.error('เกิดข้อผิดพลาดในการอ่านไฟล์', err);
         return;
     }
     var jsonData = JSON.parse(datajson);
-    var sd = new Date('2023-01-01 00:00:00');
-    var ed = new Date('2023-01-31 23:59:59');
+    var sd = new Date('2023-12-29 00:00:00');
+    var ed = new Date('2023-12-30 23:59:59');
     var data = jsonData;
     var metertype = 'over150';
     var hometype = 'Nomal';
@@ -54,7 +52,7 @@ app.use(cors());
             var hour = curr.getHours();
             var minute = curr.getMinutes();
             if (sd.getTime() <= time && ed.getTime() >= time) {
-                var monthKey = " ".concat(curr.getFullYear(), "-").concat(month + 1);
+                var monthKey = "".concat(curr.getFullYear(), "-").concat(month + 1);
                 if (!monthlyData[monthKey]) {
                     monthlyData[monthKey] = {
                         unit: 0,
@@ -370,7 +368,7 @@ app.use(cors());
             var monthTotal = monthlyData[monthKey];
             DataDayWeekMonth.chartMonth.push(monthTotal);
         }
-        console.log('monthlyData :', monthlyData);
+        // console.log('monthlyData :', monthlyData);
         return DataDayWeekMonth;
     }
     function getdataMonth(data, sd, ed, metertype, hometype) {
@@ -390,7 +388,7 @@ app.use(cors());
             var hours = curr.getHours();
             var minute = curr.getMinutes();
             if (sd.getTime() <= time && ed.getTime() >= time) {
-                var monthKey = " ".concat(curr.getFullYear(), "-").concat(curr.getMonth() + 1);
+                var monthKey = "".concat(curr.getFullYear(), "-").concat(curr.getMonth() + 1);
                 if (!monthlyData[monthKey]) {
                     // ถ้ายังไม่มีให้สร้างโครงสร้างใหม่
                     monthlyData[monthKey] = {
@@ -527,7 +525,7 @@ app.use(cors());
         var sd;
         var ed;
         var defaultStartDate = new Date('2023-01-01');
-        var defaultEndDate = new Date('2023-12-30');
+        var defaultEndDate = new Date('2023-12-30 23:59:59');
         var defaultHomeType = 'TOU';
         var defaultMeterTypeTOU = '12-24';
         var defaultMeterTypeNomal = 'below150';
@@ -577,7 +575,7 @@ app.use(cors());
         var sd;
         var ed;
         var defaultStartDate = new Date('2023-01-01');
-        var defaultEndDate = new Date('2023-12-30');
+        var defaultEndDate = new Date('2023-12-30 23:59:59');
         var defaultHomeType = 'TOU';
         var defaultMeterTypeTOU = '12-24';
         var defaultMeterTypeNomal = 'below150';
@@ -598,7 +596,7 @@ app.use(cors());
     });
     var PORT = process.env['PORT'] || 3002;
     app.listen(PORT, function () {
-        console.log("Server is running on port ".concat(PORT));
+        console.log('Server is running on port ${PORT}');
     });
     module.exports = getCurrentCost;
     module.exports = { getdataDayWeekMonth: getdataDayWeekMonth };

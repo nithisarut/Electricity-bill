@@ -2,12 +2,7 @@ import { MeterNomal, MeterTypeTOU } from './classMeter';
 import { DATA_HOLIDAY } from '../../assets/data_dayoff';
 import { readFile } from 'fs';
 const express = require('express');
-const cors = require('cors');
-
 const app = express();
-
-app.use(cors())
-
 readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
   if (err) {
     console.error('เกิดข้อผิดพลาดในการอ่านไฟล์', err);
@@ -16,8 +11,8 @@ readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
 
   const jsonData = JSON.parse(datajson);
 
-  let sd = new Date('2023-01-01 00:00:00');
-  let ed = new Date('2023-01-31 23:59:59');
+  let sd = new Date('2023-12-29 00:00:00');
+  let ed = new Date('2023-12-30 23:59:59');
   let data: any[] = jsonData;
   let metertype = 'over150';
   let hometype = 'Nomal';
@@ -132,7 +127,7 @@ readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
       let minute = curr.getMinutes();
 
       if (sd.getTime() <= time && ed.getTime() >= time) {
-        let monthKey =` ${curr.getFullYear()}-${month + 1}`;
+        let monthKey = `${curr.getFullYear()}-${month + 1}`;
 
         if (!monthlyData[monthKey]) {
           monthlyData[monthKey] = {
@@ -308,7 +303,6 @@ readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
       let day = curr.getDay();
       let hours = curr.getHours();
       let minute = curr.getMinutes();
-
       if (sd.getTime() <= time && ed.getTime() >= time) {
         let monthKey = `${curr.getFullYear()}-${month + 1}`;
 
@@ -535,7 +529,7 @@ readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
       let monthTotal = monthlyData[monthKey];
       DataDayWeekMonth.chartMonth.push(monthTotal);
     }
-    console.log('monthlyData :', monthlyData);
+    // console.log('monthlyData :', monthlyData);
     return DataDayWeekMonth;
   }
   function getdataMonth(
@@ -580,7 +574,7 @@ readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
       let minute = curr.getMinutes();
 
       if (sd.getTime() <= time && ed.getTime() >= time) {
-        let monthKey =` ${curr.getFullYear()}-${curr.getMonth() + 1}`;
+        let monthKey = `${curr.getFullYear()}-${curr.getMonth() + 1}`;
 
         if (!monthlyData[monthKey]) {
           // ถ้ายังไม่มีให้สร้างโครงสร้างใหม่
@@ -718,7 +712,7 @@ readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
     let sd: Date;
     let ed: Date;
     const defaultStartDate = new Date('2023-01-01');
-    const defaultEndDate = new Date('2023-12-30');
+    const defaultEndDate = new Date('2023-12-30 23:59:59');
     const defaultHomeType = 'TOU';
     const defaultMeterTypeTOU = '12-24';
     const defaultMeterTypeNomal = 'below150';
@@ -774,7 +768,7 @@ readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
     let sd: Date;
     let ed: Date;
     const defaultStartDate = new Date('2023-01-01');
-    const defaultEndDate = new Date('2023-12-30');
+    const defaultEndDate = new Date('2023-12-30 23:59:59');
     const defaultHomeType = 'TOU';
     const defaultMeterTypeTOU = '12-24';
     const defaultMeterTypeNomal = 'below150';
@@ -797,7 +791,7 @@ readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
 
   const PORT = process.env['PORT'] || 3002;
   app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log('Server is running on port ${PORT}');
   });
   module.exports = getCurrentCost;
   module.exports = { getdataDayWeekMonth };
