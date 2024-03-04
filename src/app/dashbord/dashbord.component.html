@@ -1,0 +1,65 @@
+<div class="p-4 sm:ml-64">
+    <div style="margin-top: 80px;">
+        <div
+            class="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-4 gap-4 mb-4">
+            <div class="bg-white p-5  shadow">
+                <div class="flex items-center">
+                    <div class="text-gray-600">
+                        <i class="fas fa-eye fa-2x"></i>
+                    </div>
+                    <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 18 20">
+                        <path d="M16 0H4a2 2 0 0 0-2 2v1H1a1 1 0 0 0 0 2h1v2H1a1 1 0 0 0 0 2h1v2H1a1 1 0 0 0 0 2h1v2H1a1 1 0 0 0 0 2h1v1a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2Zm-5.5 4.5a3 3 0 1 1 0 6 3 3 0 0 1 0-6ZM13.929 17H7.071a.5.5 0 0 1-.5-.5 3.935 3.935 0 1 1 7.858 0 .5.5 0 0 1-.5.5Z"/>
+                    </svg>
+                    <div class="text-xl font-medium text-gray-700 ml-3">Current electricity bill</div>
+                </div>
+                <div class="mt-6 text-3xl font-medium text-gray-700">
+                    ${{currentCostData.billNow}}
+                    <span class="text-green-500">(0.43%)</span>
+                </div>
+            </div>
+            <div class="bg-white p-5  shadow">
+                <div class="flex items-center">
+                    <div class="text-gray-600">
+                        <i class="fas fa-eye fa-2x"></i>
+                    </div>
+                    <div class="text-xl font-medium text-gray-700 ml-3">
+                        Electricity cost On Peak</div>
+                </div>
+                <div class="mt-6 text-3xl font-medium text-gray-700">
+                    $ ${{currentCostData.billOnPeak}}
+                    <span class="text-green-500">(0.43%)</span>
+                </div>
+            </div>
+            <div class="bg-white p-5  shadow">
+                <div class="flex items-center">
+                    <div class="text-gray-600">
+                        <i class="fas fa-eye fa-2x"></i>
+                    </div>
+                    <div class="text-xl font-medium text-gray-700 ml-3">Off Peak Electricity Charge</div>
+                </div>
+                <div class="mt-6 text-3xl font-medium text-gray-700">
+                    $3.456K
+                    <span class="text-green-500">(0.43%)</span>
+                </div>
+            </div>
+            <div class="bg-white p-5  shadow">
+                <div class="flex items-center">
+                    <div class="text-gray-600">
+                        <i class="fas fa-eye fa-2x"></i>
+                    </div>
+                    <div class="text-xl font-medium text-gray-700 ml-3">Accumulated electricity cost per year</div>
+                </div>
+               
+            </div>
+        </div>
+        <div class="grid grid-cols-3 gap-4 m">
+            <div class="col-span-2 ">
+                <app-time-series-month></app-time-series-month>
+            </div>
+            <div class="col-span-1 " >   
+                <app-chart-summary-month></app-chart-summary-month>
+            </div>
+        </div>
+    </div>
+</div>
+
