@@ -1,47 +1,141 @@
+import {
+  getCurrentCost,
+  getdataDayWeekMonth,
+  getdataMonth,
+  getCustomerById,
+  getCustomerAll,
+} from './dataMeter';
 const express = require('express');
 const cors = require('cors');
 
 const app = express();
 
-app.use(cors())
+app.use(cors());
+const fs = require('fs');
+const powerData = JSON.parse(
+  fs.readFileSync('../../assets/data_power_meter.json')
+);
 
-import { readFile } from 'fs';
-const {getCurrentCost,getdataDayWeekMonth} = require('./dataMeter');
-readFile('../../assets/data_power_meter.json', 'utf8', (err, datajson) => {
-  if (err) {
-    console.error('เกิดข้อผิดพลาดในการอ่านไฟล์', err);
-    return;
-  }
+let data: any[] = powerData;
 
-  const jsonData = JSON.parse(datajson);
-  let data: any[] = jsonData;
+app.get('/getCurrentCost', (req: any, res: any) => {
+  try {
+    let sd: Date;
+    let ed: Date;
+    const defaultStartDate = new Date('2023-01-01 00:00:00');
+    const defaultEndDate = new Date('2023-12-30 23:59:59');
+    const defaultHomeType = 'TOU';
+    const defaultMeterTypeTOU = '12-24';
+    const defaultMeterTypeNomal = 'below150';
 
-  app.get('/getCurrentCost', (req: any, res: any) => {
-    const sd = new Date(req.query.sd);
-    const ed = new Date(req.query.ed);
-    const metertype = req.query.metertype;
-    const result = getCurrentCost(data, sd, ed, metertype);
-    res.json(result);
-  });
+    let metertype = req.query.metertype;
+    let hometype = req.query.hometype;
 
-  app.get('/getdataDayWeekMonth', (req: any, res: any) => {
-    const sd = req.query.sd ? new Date(req.query.sd) : new Date(0);
-    const ed = req.query.ed ? new Date(req.query.ed) : new Date();
-    const metertype = req.query.metertype;
-    if (!sd || !ed || !metertype) {
-      return res.status(400).json({ error: 'Invalid request parameters' });
+    sd = req.query.sd ? new Date(req.query.sd + '00:00:00') : defaultStartDate;
+    ed = req.query.ed ? new Date(req.query.ed + '23:59:59') : defaultEndDate;
+    hometype = hometype || defaultHomeType;
+
+    if (!metertype && hometype === 'TOU') {
+      metertype = defaultMeterTypeTOU;
+    } else if (!metertype && hometype === 'Nomal') {
+      metertype = defaultMeterTypeNomal;
     }
-    let DataDayWeekMonth = {
-      chartDay: [],
-      chartWeek: [],
-      chartMonth: [],
-    };
-    const result = getdataDayWeekMonth(data, sd, ed, metertype);
-    res.json(result);
-  });
+    const result = getCurrentCost(data, sd, ed, metertype, hometype);
 
-  const PORT = process.env['PORT'] || 3001;
-  app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-  });
+    res.json(result);
+  } catch (error) {
+    console.error('An error occurred:', error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
+app.get('/getdataDayWeekMonth', (req: any, res: any) => {
+  try {
+    let sd: Date;
+    let ed: Date;
+    const defaultStartDate = new Date('2023-01-01 00:00:00');
+    const defaultEndDate = new Date('2023-12-30 23:59:59');
+    const defaultHomeType = 'TOU';
+    const defaultMeterTypeTOU = '12-24';
+    const defaultMeterTypeNomal = 'below150';
+
+    let metertype = req.query.metertype;
+    let hometype = req.query.hometype;
+    sd = req.query.sd ? new Date(req.query.sd + '00:00:00') : defaultStartDate;
+    ed = req.query.ed ? new Date(req.query.ed + '23:59:59') : defaultEndDate;
+    hometype = hometype || defaultHomeType;
+
+    if (!metertype && hometype === 'TOU') {
+      metertype = defaultMeterTypeTOU;
+    } else if (!metertype && hometype === 'Nomal') {
+      metertype = defaultMeterTypeNomal;
+    }
+
+    const result = getdataDayWeekMonth(data, sd, ed, metertype, hometype);
+    res.json(result);
+  } catch (error) {
+    console.error('An error occurred:', error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
+app.get('/getdataMonth', (req: any, res: any) => {
+  try {
+    let sd: Date;
+    let ed: Date;
+    const defaultStartDate = new Date('2023-01-01 00:00:00');
+    const defaultEndDate = new Date('2023-12-30 23:59:59');
+    const defaultHomeType = 'TOU';
+    const defaultMeterTypeTOU = '12-24';
+    const defaultMeterTypeNomal = 'below150';
+
+    let metertype = req.query.metertype;
+    let hometype = req.query.hometype;
+    sd = req.query.sd ? new Date(req.query.sd + '00:00:00') : defaultStartDate;
+    ed = req.query.ed ? new Date(req.query.ed + '23:59:59') : defaultEndDate;
+    hometype = hometype || defaultHomeType;
+
+    if (!metertype && hometype === 'TOU') {
+      metertype = defaultMeterTypeTOU;
+    } else if (!metertype && hometype === 'Nomal') {
+      metertype = defaultMeterTypeNomal;
+    }
+    const result = getdataMonth(data, sd, ed, metertype, hometype);
+    res.json(result);
+  } catch (error) {
+    console.error('An error occurred:', error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
+app.get('/getCustomerById', (req: any, res: any) => {
+  try {
+    let id: string;
+    const defaultCustomer = '1';
+    id = req.query.id ? req.query.id : defaultCustomer;
+    const result = getCustomerById(id);
+    if (result) {
+      res.json(result);
+    } else {
+      res.status(500).json('Customer not found');
+    }
+  } catch (error) {
+    console.error('An error occurred:', error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
+app.get('/getCustomerAll', (req: any, res: any) => {
+  try {
+    const result = getCustomerAll();
+    res.json(result);
+  } catch (error) {
+    console.error('An error occurred:', error);
+    res.status(500).json({ error: 'An error occurred' });
+  }
+});
+
+const PORT = process.env['PORT'] || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });

@@ -1,6 +1,5 @@
 import { MeterNomal, MeterTypeTOU } from './classMeter';
 import { DATA_HOLIDAY } from '../../assets/data_dayoff';
-import { readFile } from 'fs';
 const express = require('express');
 const app = express();
 const cors = require('cors');
@@ -13,14 +12,12 @@ const customerData = JSON.parse(
   fs.readFileSync('../../assets/data_customer.json')
 );
 
-
 let sd = new Date('2023-01-01 00:0:00');
 let ed = new Date('2023-01-31 23:59:59');
 let data: any[] = powerData;
 let metertype = 'over150';
 let hometype = 'Nomal';
-// let metertype = '12-24';
-// let hometype = 'TOU';
+
 interface Data {
   id: string;
   name: string;
@@ -38,7 +35,7 @@ interface datadayweekMonth {
           unit: number;
           price: number;
         };
-        offpeak: {
+        offPeak: {
           unit: number;
           price: number;
         };
@@ -52,7 +49,7 @@ interface datadayweekMonth {
           unit: number;
           price: number;
         };
-        offpeak: {
+        offPeak: {
           unit: number;
           price: number;
         };
@@ -66,7 +63,7 @@ interface datadayweekMonth {
           unit: number;
           price: number;
         };
-        offpeak: {
+        offPeak: {
           unit: number;
           price: number;
         };
@@ -86,13 +83,14 @@ let DataDayWeekMonth: datadayweekMonth = {
   chartMonth: [],
 };
 let DataMonth: any[] = [];
-function getCurrentCost(
+export function getCurrentCost(
   data: any[],
   sd: Date,
   ed: Date,
   metertype: string,
   hometype: string
 ) {
+  DataMonthTOU = [];
   const monthlyData: {
     [month: string]: {
       unit: number;
@@ -149,7 +147,6 @@ function getCurrentCost(
 
       energyNomal = Number(item.energy);
       if (i === 0) {
-        // หากเป็นข้อมูลแรกให้ลบกับ 0
         energy = item.energy - 0;
       } else {
         const previousItem = data[i - 1];
@@ -195,7 +192,6 @@ function getCurrentCost(
         let unit = calc.Unit();
         engUnit += unit;
         let fee = calc.Fee();
-        // console.log('engUnit :', engUnit);
         totalUnit = calc.ElectricityBillBelow(engUnit);
         monthlyData[monthKey].unit += unit;
         monthlyData[monthKey].priceTotal = calc.ElectricityBillBelow(
@@ -230,9 +226,7 @@ function getCurrentCost(
 
     energyNomal = Number(currentItem.energy);
 
-    // ตรวจสอบว่าเป็นข้อมูลแรกในช่วงเวลาที่กำหนดหรือไม่
     if (i === 0) {
-      // หากเป็นข้อมูลแรกให้ลบกับ 0
       energy = currentItem.energy - 0;
     } else {
       const previousItem = data[i - 1];
@@ -264,7 +258,6 @@ function getCurrentCost(
         yearlyPriceTotal[year] = 0;
       }
       yearlyPriceTotal[year] += price;
-      //  console.log("priceTotal :",priceTotal)
     } else if (hometype == 'Nomal') {
       let calc = new MeterNomal({
         id: 0,
@@ -277,7 +270,6 @@ function getCurrentCost(
       let unit = calc.Unit();
       engUnit += unit;
       let fee = calc.Fee();
-      // console.log('engUnit :', engUnit);
       totalUnit = calc.ElectricityBillBelow(engUnit);
       monthlyData1[monthKey1].unit += unit;
       monthlyData1[monthKey1].priceTotal = calc.ElectricityBillBelow(
@@ -298,7 +290,7 @@ function getCurrentCost(
   for (const item in monthlyData1) {
     billSummary += monthlyData1[item].priceTotal;
     if (monthlyData1.hasOwnProperty(item)) {
-      const year: number = parseInt(item); // แปลงชื่อของ item เป็นตัวเลข (ปี)
+      const year: number = parseInt(item);
       if (!yearlySummary2[year]) {
         yearlySummary2[year] = 0;
       }
@@ -306,23 +298,28 @@ function getCurrentCost(
     }
   }
   DataMonthTOU.push({
-    billNow: billNow,
-    billOnPeak: totalOnpeak,
-    billOffPeak: totalOffpeak + totalHoliday,
+    billNow: parseFloat(billNow.toFixed(2)),
+    billOnPeak: parseFloat(totalOnpeak.toFixed(2)),
+    billOffPeak: parseFloat((totalOffpeak + totalHoliday).toFixed(2)),
     billSummary:
       hometype == 'TOU'
-        ? yearlySummary[ed.getFullYear()]
-        : yearlySummary2[ed.getFullYear()],
+        ? parseFloat(yearlySummary[ed.getFullYear()].toFixed(2))
+        : parseFloat(yearlySummary2[ed.getFullYear()].toFixed(2)),
   });
   return DataMonthTOU;
 }
-function getdataDayWeekMonth(
+export function getdataDayWeekMonth(
   data: any[],
   sd: Date,
   ed: Date,
   metertype: string,
   hometype: string
 ) {
+  DataDayWeekMonth = {
+    chartDay: [],
+    chartWeek: [],
+    chartMonth: [],
+  };
   let currDate: string = '';
   let energyNomal: number = 0;
   let energy: number = 0;
@@ -348,7 +345,7 @@ function getdataDayWeekMonth(
         hour: number;
         price: number;
       };
-      offpeak: {
+      offPeak: {
         unit: number;
         hour: number;
         price: number;
@@ -365,7 +362,7 @@ function getdataDayWeekMonth(
         hour: number;
         price: number;
       };
-      offpeak: {
+      offPeak: {
         unit: number;
         hour: number;
         price: number;
@@ -382,7 +379,7 @@ function getdataDayWeekMonth(
         hour: number;
         price: number;
       };
-      offpeak: {
+      offPeak: {
         unit: number;
         hour: number;
         price: number;
@@ -473,7 +470,7 @@ function getdataDayWeekMonth(
             hour: 0,
             price: 0,
           },
-          offpeak: {
+          offPeak: {
             unit: 0,
             hour: 0,
             price: 0,
@@ -491,7 +488,7 @@ function getdataDayWeekMonth(
             hour: 0,
             price: 0,
           },
-          offpeak: {
+          offPeak: {
             unit: 0,
             hour: 0,
             price: 0,
@@ -509,7 +506,7 @@ function getdataDayWeekMonth(
             hour: 0,
             price: 0,
           },
-          offpeak: {
+          offPeak: {
             unit: 0,
             hour: 0,
             price: 0,
@@ -558,10 +555,10 @@ function getdataDayWeekMonth(
         dailyTotals[dayKey].priceTotal += priceTotal;
         dailyTotals[dayKey].onPeak.unit += unitOnpeak;
         dailyTotals[dayKey].onPeak.price += priceOnpeak;
-        dailyTotals[dayKey].offpeak.unit += unitOffpeak + unitHoliday;
-        dailyTotals[dayKey].offpeak.price += priceOffpeak + priceHoliday;
+        dailyTotals[dayKey].offPeak.unit += unitOffpeak + unitHoliday;
+        dailyTotals[dayKey].offPeak.price += priceOffpeak + priceHoliday;
         dailyTotals[dayKey].onPeak.hour = hourOn;
-        dailyTotals[dayKey].offpeak.hour = hourOff;
+        dailyTotals[dayKey].offPeak.hour = hourOff;
 
         weeklyData[weekKey].date = dateOnly;
         weeklyData[weekKey].unitTotal += unitTotal;
@@ -569,9 +566,9 @@ function getdataDayWeekMonth(
         weeklyData[weekKey].onPeak.unit += unitOnpeak;
         weeklyData[weekKey].onPeak.price += priceOnpeak;
         weeklyData[weekKey].onPeak.hour = hourOnWeek;
-        weeklyData[weekKey].offpeak.unit += unitOffpeak + unitHoliday;
-        weeklyData[weekKey].offpeak.price += priceOffpeak + priceHoliday;
-        weeklyData[weekKey].offpeak.hour = hourOffWeek;
+        weeklyData[weekKey].offPeak.unit += unitOffpeak + unitHoliday;
+        weeklyData[weekKey].offPeak.price += priceOffpeak + priceHoliday;
+        weeklyData[weekKey].offPeak.hour = hourOffWeek;
 
         monthlyData[monthKey].date = dateOnly;
         monthlyData[monthKey].unitTotal += unitTotal;
@@ -579,9 +576,9 @@ function getdataDayWeekMonth(
         monthlyData[monthKey].onPeak.unit += unitOnpeak;
         monthlyData[monthKey].onPeak.price += priceOnpeak;
         monthlyData[monthKey].onPeak.hour = hourOnMonth;
-        monthlyData[monthKey].offpeak.unit += unitOffpeak + unitHoliday;
-        monthlyData[monthKey].offpeak.price += priceOffpeak + priceHoliday;
-        monthlyData[monthKey].offpeak.hour = hourOffMonth;
+        monthlyData[monthKey].offPeak.unit += unitOffpeak + unitHoliday;
+        monthlyData[monthKey].offPeak.price += priceOffpeak + priceHoliday;
+        monthlyData[monthKey].offPeak.hour = hourOffMonth;
         monthlyData[monthKey].fee = fee;
         monthlyData[monthKey].summary =
           monthlyData[monthKey].priceTotal + monthlyData[monthKey].fee;
@@ -600,7 +597,9 @@ function getdataDayWeekMonth(
 
         dailyTotals[dayKey].date = dateOnly;
         dailyTotals[dayKey].unitTotal += UnitTotal;
-        dailyTotals[dayKey].priceTotal = calc.ElectricityBillBelow(UnitTotal);
+        dailyTotals[dayKey].priceTotal = calc.ElectricityBillBelow(
+          dailyTotals[dayKey].unitTotal
+        );
 
         weeklyData[weekKey].date = dateOnly;
         weeklyData[weekKey].unitTotal += UnitTotal;
@@ -621,25 +620,73 @@ function getdataDayWeekMonth(
   }
   for (let dayKey in dailyTotals) {
     let dailyTotal = dailyTotals[dayKey];
-    DataDayWeekMonth.chartDay.push(dailyTotal);
+    let newdailyTotal = {
+      date: dailyTotal.date,
+      unitTotal: parseFloat(dailyTotal.unitTotal.toFixed(2)),
+      priceTotal: parseFloat(dailyTotal.priceTotal.toFixed(2)),
+      onPeak: {
+        unit: parseFloat(dailyTotal.onPeak.unit.toFixed(2)),
+        hour: dailyTotal.onPeak.hour,
+        price: parseFloat(dailyTotal.onPeak.price.toFixed(2)),
+      },
+      offPeak: {
+        unit: parseFloat(dailyTotal.offPeak.unit.toFixed(2)),
+        hour: dailyTotal.offPeak.hour,
+        price: parseFloat(dailyTotal.offPeak.price.toFixed(2)),
+      },
+    };
+    DataDayWeekMonth.chartDay.push(newdailyTotal);
   }
   for (let weekKey in weeklyData) {
     let weekTotal = weeklyData[weekKey];
-    let weekUnit = DataDayWeekMonth.chartWeek.push(weekTotal);
+    let newweekTotal = {
+      date: weekTotal.date,
+      unitTotal: parseFloat(weekTotal.unitTotal.toFixed(2)),
+      priceTotal: parseFloat(weekTotal.priceTotal.toFixed(2)),
+      onPeak: {
+        unit: parseFloat(weekTotal.onPeak.unit.toFixed(2)),
+        hour: weekTotal.onPeak.hour,
+        price: parseFloat(weekTotal.onPeak.price.toFixed(2)),
+      },
+      offPeak: {
+        unit: parseFloat(weekTotal.offPeak.unit.toFixed(2)),
+        hour: weekTotal.offPeak.hour,
+        price: parseFloat(weekTotal.offPeak.price.toFixed(2)),
+      },
+    };
+    DataDayWeekMonth.chartWeek.push(newweekTotal);
   }
   for (let monthKey in monthlyData) {
     let monthTotal = monthlyData[monthKey];
-    DataDayWeekMonth.chartMonth.push(monthTotal);
+    let newmonthTotal = {
+      date: monthTotal.date,
+      unitTotal: parseFloat(monthTotal.unitTotal.toFixed(2)),
+      priceTotal: parseFloat(monthTotal.priceTotal.toFixed(2)),
+      onPeak: {
+        unit: parseFloat(monthTotal.onPeak.unit.toFixed(2)),
+        hour: monthTotal.onPeak.hour,
+        price: parseFloat(monthTotal.onPeak.price.toFixed(2)),
+      },
+      offPeak: {
+        unit: parseFloat(monthTotal.offPeak.unit.toFixed(2)),
+        hour: monthTotal.offPeak.hour,
+        price: parseFloat(monthTotal.offPeak.price.toFixed(2)),
+      },
+      fee: monthTotal.fee,
+      summary: parseFloat(monthTotal.summary.toFixed(2)),
+    };
+    DataDayWeekMonth.chartMonth.push(newmonthTotal);
   }
   return DataDayWeekMonth;
 }
-function getdataMonth(
+export function getdataMonth(
   data: any[],
   sd: Date,
   ed: Date,
   metertype: string,
   hometype: string
 ) {
+  DataMonth = [];
   let currDate: string = '';
   let energy: number = 0;
   let cuEnergy: number = 0;
@@ -796,21 +843,36 @@ function getdataMonth(
     }
   }
   for (let monthKey in monthlyData) {
-    let dataMOnthTotal = monthlyData[monthKey];
-    DataMonth.push(dataMOnthTotal);
+    let dataMonthTotal = monthlyData[monthKey];
+    let newDataMonthTotal = {
+      date: dataMonthTotal.date,
+      unitTotal: parseFloat(dataMonthTotal.unitTotal.toFixed(2)),
+      priceTotal: parseFloat(dataMonthTotal.priceTotal.toFixed(2)),
+      onPeak: {
+        unit: parseFloat(dataMonthTotal.onPeak.unit.toFixed(2)),
+        price: parseFloat(dataMonthTotal.onPeak.price.toFixed(2)),
+        hour: dataMonthTotal.onPeak.hour,
+      },
+      offPeak: {
+        unit: parseFloat(dataMonthTotal.offPeak.unit.toFixed(2)),
+        price: parseFloat(dataMonthTotal.offPeak.price.toFixed(2)),
+        hour: dataMonthTotal.offPeak.hour,
+      },
+      fee: parseFloat(dataMonthTotal.fee.toFixed(2)),
+      summary: parseFloat(dataMonthTotal.summary.toFixed(2)),
+    };
+
+    DataMonth.push(newDataMonthTotal);
   }
   return DataMonth;
 }
-function getCustomerById(id: string): Data | undefined {
+export function getCustomerById(id: string): Data | undefined {
   return customerData.find((item: { id: string }) => item.id === id);
 }
-function getCustomerAll(): typeof customerData {
+export function getCustomerAll(): typeof customerData {
   return customerData;
 }
-// getCurrentCost(data, sd, ed, metertype, hometype);
-// getdataDayWeekMonth(data, sd, ed, metertype, hometype);
-// getdataMonth(data, sd, ed, metertype, hometype);
-// console.log('DataDayWeekMonth :', DataDayWeekMonth);
+
 app.get('/getCurrentCost', (req: any, res: any) => {
   try {
     let sd: Date;
@@ -820,12 +882,11 @@ app.get('/getCurrentCost', (req: any, res: any) => {
     const defaultHomeType = 'TOU';
     const defaultMeterTypeTOU = '12-24';
     const defaultMeterTypeNomal = 'below150';
-
     let metertype = req.query.metertype;
     let hometype = req.query.hometype;
+    sd = req.query.sd ? new Date(req.query.sd + '00:00:00') : defaultStartDate;
+    ed = req.query.ed ? new Date(req.query.ed + '23:59:59') : defaultEndDate;
 
-    sd = req.query.sd ? new Date(req.query.sd) : defaultStartDate;
-    ed = req.query.ed ? new Date(req.query.ed) : defaultEndDate;
     hometype = hometype || defaultHomeType;
 
     if (!metertype && hometype === 'TOU') {
@@ -855,8 +916,8 @@ app.get('/getdataDayWeekMonth', (req: any, res: any) => {
 
     let metertype = req.query.metertype;
     let hometype = req.query.hometype;
-    sd = req.query.sd ? new Date(req.query.sd) : defaultStartDate;
-    ed = req.query.ed ? new Date(req.query.ed) : defaultEndDate;
+    sd = req.query.sd ? new Date(req.query.sd + '00:00:00') : defaultStartDate;
+    ed = req.query.ed ? new Date(req.query.ed + '23:59:59') : defaultEndDate;
     hometype = hometype || defaultHomeType;
 
     if (!metertype && hometype === 'TOU') {
@@ -876,7 +937,6 @@ app.get('/getdataDayWeekMonth', (req: any, res: any) => {
     res.status(500).json({ error: 'An error occurred' });
   }
 });
-
 app.get('/getdataMonth', (req: any, res: any) => {
   try {
     let sd: Date;
@@ -889,8 +949,8 @@ app.get('/getdataMonth', (req: any, res: any) => {
 
     let metertype = req.query.metertype;
     let hometype = req.query.hometype;
-    sd = req.query.sd ? new Date(req.query.sd) : defaultStartDate;
-    ed = req.query.ed ? new Date(req.query.ed) : defaultEndDate;
+    sd = req.query.sd ? new Date(req.query.sd + '00:00:00') : defaultStartDate;
+    ed = req.query.ed ? new Date(req.query.ed + '23:59:59') : defaultEndDate;
     hometype = hometype || defaultHomeType;
 
     if (!metertype && hometype === 'TOU') {
@@ -906,25 +966,22 @@ app.get('/getdataMonth', (req: any, res: any) => {
     res.status(500).json({ error: 'An error occurred' });
   }
 });
-
 app.get('/getCustomerById', (req: any, res: any) => {
   try {
     let id: string;
     const defaultCustomer = '1';
     id = req.query.id ? req.query.id : defaultCustomer;
     const result = getCustomerById(id);
-    if(result){
+    if (result) {
       res.json(result);
-
-    }else{
-      res.status(500).json('Customer not found')
+    } else {
+      res.status(500).json('Customer not found');
     }
   } catch (error) {
     console.error('An error occurred:', error);
     res.status(500).json({ error: 'An error occurred' });
   }
 });
-
 app.get('/getCustomerAll', (req: any, res: any) => {
   try {
     const result = getCustomerAll();
@@ -934,9 +991,7 @@ app.get('/getCustomerAll', (req: any, res: any) => {
     res.status(500).json({ error: 'An error occurred' });
   }
 });
-
-const PORT = process.env['PORT'] || 3000;
+const PORT = process.env['PORT'] || 3002;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
-// });
