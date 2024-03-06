@@ -1,10 +1,10 @@
 [
 {"id":"1","name":"tset1","lastname":"test1","type_home":"TOU","type_meter":"12-24"},
 {"id":"2","name":"tset2","lastname":"test2","type_home":"TOU","type_meter":"lower-12"},
-{"id":"3","name":"tset3","lastname":"test3","type_home":"Nomal","type_meter":"below150"},
-{"id":"4","name":"tset4","lastname":"test4","type_home":"Nomal","type_meter":"over150"},
+{"id":"3","name":"tset3","lastname":"test3","type_home":"Normal","type_meter":"below150"},
+{"id":"4","name":"tset4","lastname":"test4","type_home":"Normal","type_meter":"over150"},
 {"id":"5","name":"tset5","lastname":"test5","type_home":"TOU","type_meter":"lower-12"},
 {"id":"6","name":"tset6","lastname":"test6","type_home":"TOU","type_meter":"12-24"},
-{"id":"7","name":"tset7","lastname":"test7","type_home":"Nomal","type_meter":"over150"},
-{"id":"8","name":"tset8","lastname":"test8","type_home":"Nomal","type_meter":"below150"}
+{"id":"7","name":"tset7","lastname":"test7","type_home":"Normal","type_meter":"over150"},
+{"id":"8","name":"tset8","lastname":"test8","type_home":"Normal","type_meter":"below150"}
 ]

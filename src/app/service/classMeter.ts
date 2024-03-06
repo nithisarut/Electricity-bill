@@ -208,10 +208,66 @@ export class MeterTypeTOU extends MeterValueData {
     let fee = this.Service_Fee[this.type];
     return fee.val;
   }
+
+  calculate(): any {
+    const eng = super.Unit();
+    const { dateType, period } = this.ConstTOU(this.date);
+    const fee = this.Service_Fee[this.type];
+    const hasHoliday = DATA_HOLIDAY.some(
+        (o) => new Date(o).toDateString() === this.date.toDateString()
+    );
+
+    let unitTotal = 0,
+        priceTotal = 0,
+        unitOnpeak = 0,
+        priceOnpeak = 0,
+        unitOffpeak = 0,
+        priceOffpeak = 0,
+        unitHoliday = 0,
+        priceHoliday = 0,
+        feeValue = fee.val;
+
+    if (dateType === DATE_FOCUS.SAT_SUN || hasHoliday) {
+        unitTotal = eng;
+        priceTotal = eng * fee.offPeak;
+    } else if (dateType === DATE_FOCUS.MON_FRI1 && !hasHoliday) {
+        if (period === DATE_PERIOD.ON_PEAK1) {
+            unitTotal = eng;
+            priceTotal = eng * fee.onPeak;
+        } else if (period === DATE_PERIOD.OFF_PEAK1) {
+            unitTotal = eng;
+            priceTotal = eng * fee.offPeak;
+        }
+    }
+
+    if (period === DATE_PERIOD.ON_PEAK1 && !hasHoliday) {
+        unitOnpeak = eng;
+        priceOnpeak = eng * fee.onPeak;
+    } else if (period === DATE_PERIOD.OFF_PEAK1 && !hasHoliday) {
+        unitOffpeak = eng;
+        priceOffpeak = eng * fee.offPeak;
+    } else if (hasHoliday) {
+        unitHoliday = eng;
+        priceHoliday = eng * fee.offPeak;
+    }
+
+    return {
+        unitTotal,
+        priceTotal,
+        unitOnpeak,
+        priceOnpeak,
+        unitOffpeak,
+        priceOffpeak,
+        unitHoliday,
+        priceHoliday,
+        fee: feeValue,
+        summary: priceTotal + feeValue,
+    };
+}
 }
 
-export class MeterNomal extends MeterValueData {
-  private nomalFee = {
+export class MeterNormal extends MeterValueData {
+  private normalFee = {
     below150: {
       type: 'below150',
       fee15: 2.3488,
@@ -251,7 +307,7 @@ export class MeterNomal extends MeterValueData {
 
   ElectricityBillBelow(unit:number): number {
     let eng = super.Unit();
-    let fee = this.nomalFee[this.type];
+    let fee = this.normalFee[this.type];
     if (unit <= 15) {
       return unit * fee.fee15;
     } else if (unit <= 25) {
@@ -299,7 +355,7 @@ export class MeterNomal extends MeterValueData {
     return eng;
   }
   override Fee(): number {
-    let fee = this.nomalFee[this.type];
+    let fee = this.normalFee[this.type];
     return fee.val;
   }
 }

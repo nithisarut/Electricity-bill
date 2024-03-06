@@ -1,4 +1,4 @@
-import { MeterNomal, MeterTypeTOU } from './classMeter';
+import { MeterNormal, MeterTypeTOU } from './classMeter';
 import { DATA_HOLIDAY } from '../../assets/data_dayoff';
 const fs = require('fs');
 const powerData = JSON.parse(
@@ -11,7 +11,7 @@ let sd = new Date('2023-01-01 00:0:00');
 let ed = new Date('2023-01-31 23:59:59');
 let data: any[] = powerData;
 let metertype = 'over150';
-let hometype = 'Nomal';
+let hometype = 'Normal';
 
 interface Data {
   id: string;
@@ -21,50 +21,27 @@ interface Data {
   type_meter: string;
 }
 interface datadayweekMonth {
-  chartDay:
-    | {
-        date: string;
-        unitTotal: number;
-        priceTotal: number;
-        onPeak: {
-          unit: number;
-          price: number;
-        };
-        offPeak: {
-          unit: number;
-          price: number;
-        };
-      }[];
-  chartWeek:
-    | {
-        date: string;
-        unitTotal: number;
-        priceTotal: number;
-        onPeak: {
-          unit: number;
-          price: number;
-        };
-        offPeak: {
-          unit: number;
-          price: number;
-        };
-      }[];
-  chartMonth:
-    | {
-        date: string;
-        unitTotal: number;
-        priceTotal: number;
-        onPeak: {
-          unit: number;
-          price: number;
-        };
-        offPeak: {
-          unit: number;
-          price: number;
-        };
-        fee: number;
-        summary: number;
-      }[];
+  chartDay: ChartData[];
+  chartWeek: ChartData[];
+  chartMonth: ChartDataWithSummary[];
+}
+interface ChartData {
+  date: string;
+  unitTotal: number;
+  priceTotal: number;
+  onPeak: {
+    unit: number;
+    price: number;
+  };
+  offPeak: {
+    unit: number;
+    price: number;
+  };
+}
+
+interface ChartDataWithSummary extends ChartData {
+  fee: number;
+  summary: number;
 }
 let DataMonthTOU: {
   billNow: number;
@@ -78,6 +55,7 @@ let DataDayWeekMonth: datadayweekMonth = {
   chartMonth: [],
 };
 let DataMonth: any[] = [];
+
 export function getCurrentCost(
   data: any[],
   sd: Date,
@@ -86,35 +64,17 @@ export function getCurrentCost(
   hometype: string
 ) {
   DataMonthTOU = [];
-  const monthlyData: {
-    [month: string]: {
-      unit: number;
-      priceTotal: number;
-      onpeakTotal: number;
-      offpeakTotal: number;
-      fee: number;
-      summary: number;
-    };
-  } = {};
-  const monthlyData1: {
-    [month: string]: {
-      unit: number;
-      priceTotal: number;
-      onpeakTotal: number;
-      offpeakTotal: number;
-      fee: number;
-      summary: number;
-    };
-  } = {};
-  let currDate: string = '';
-  let energyNomal: number = 0;
-  let energy: number = 0;
-  let cuEnergy: number = 0;
-  let totalUnit = 0;
-  let engUnit = 0;
-  let totalOnpeak = 0;
-  let totalOffpeak = 0;
-  let totalHoliday = 0;
+  let monthlyData: Record<string, any> = {};
+  let monthlyData1: Record<string, any> = {};
+  let currDate: string = '',
+    energyNormal: number = 0,
+    energy: number = 0,
+    cuEnergy: number = 0,
+    totalUnit = 0,
+    engUnit = 0,
+    totalOnpeak = 0,
+    totalOffpeak = 0,
+    totalHoliday = 0;
 
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
@@ -126,21 +86,14 @@ export function getCurrentCost(
       let monthKey = `${curr.getFullYear()}-${month + 1}`;
 
       if (!monthlyData[monthKey]) {
-        monthlyData[monthKey] = {
-          unit: 0,
-          priceTotal: 0,
-          onpeakTotal: 0,
-          offpeakTotal: 0,
-          fee: 0,
-          summary: 0,
-        };
+        monthlyData[monthKey] = createMonthlyDataObject();
       }
 
       if (!currDate.length) {
         currDate = curr.toDateString();
       }
 
-      energyNomal = Number(item.energy);
+      energyNormal = Number(item.energy);
       if (i === 0) {
         energy = item.energy - 0;
       } else {
@@ -158,16 +111,19 @@ export function getCurrentCost(
           date: item.datetime,
           energy: energy,
         });
-        let unit = calc.Unit();
-        let price = calc.PriceTotal();
+
+        let unit = calc.Unit(),
+          price = calc.PriceTotal(),
+          fee = calc.Fee(),
+          onPeak = calc.PriceOnPeak(),
+          offpeak = calc.PriceOffPeak(),
+          holiday = calc.PriceHoliday();
+
         totalUnit += price;
-        let fee = calc.Fee();
-        let onPeak = calc.PriceOnPeak();
         totalOnpeak += onPeak;
-        let offpeak = calc.PriceOffPeak();
         totalOffpeak += offpeak;
-        let holiday = calc.PriceHoliday();
         totalHoliday += holiday;
+
         monthlyData[monthKey].unit += unit;
         monthlyData[monthKey].priceTotal += price;
         monthlyData[monthKey].onpeakTotal += onPeak;
@@ -175,8 +131,8 @@ export function getCurrentCost(
         monthlyData[monthKey].fee = fee;
         monthlyData[monthKey].summary =
           monthlyData[monthKey].priceTotal + monthlyData[monthKey].fee;
-      } else if (hometype == 'Nomal') {
-        let calc = new MeterNomal({
+      } else if (hometype == 'Normal') {
+        let calc = new MeterNormal({
           id: 0,
           type: metertype,
           name: 'AAA',
@@ -219,7 +175,7 @@ export function getCurrentCost(
 
     const year = currentTime.getFullYear();
 
-    energyNomal = Number(currentItem.energy);
+    energyNormal = Number(currentItem.energy);
 
     if (i === 0) {
       energy = currentItem.energy - 0;
@@ -229,14 +185,7 @@ export function getCurrentCost(
       energy = Number(currentItem.energy - previousEnergy);
     }
     if (!monthlyData1[monthKey1]) {
-      monthlyData1[monthKey1] = {
-        unit: 0,
-        priceTotal: 0,
-        onpeakTotal: 0,
-        offpeakTotal: 0,
-        fee: 0,
-        summary: 0,
-      };
+      monthlyData1[monthKey1] = createMonthlyDataObject();
     }
 
     if (hometype == 'TOU') {
@@ -253,8 +202,8 @@ export function getCurrentCost(
         yearlyPriceTotal[year] = 0;
       }
       yearlyPriceTotal[year] += price;
-    } else if (hometype == 'Nomal') {
-      let calc = new MeterNomal({
+    } else if (hometype == 'Normal') {
+      let calc = new MeterNormal({
         id: 0,
         type: metertype,
         name: 'AAA',
@@ -262,9 +211,9 @@ export function getCurrentCost(
         energy: energy,
       });
 
-      let unit = calc.Unit();
+      let unit = calc.Unit(),
+        fee = calc.Fee();
       engUnit += unit;
-      let fee = calc.Fee();
       totalUnit = calc.ElectricityBillBelow(engUnit);
       monthlyData1[monthKey1].unit += unit;
       monthlyData1[monthKey1].priceTotal = calc.ElectricityBillBelow(
@@ -315,96 +264,42 @@ export function getdataDayWeekMonth(
     chartWeek: [],
     chartMonth: [],
   };
-  let currDate: string = '';
-  let energyNomal: number = 0;
-  let energy: number = 0;
-  let cuEnergy: number = 0;
-  let hourOn = 0;
-  let hourOff = 0;
-  let hourOnWeek = 0;
-  let hourOffWeek = 0;
-  let hourOnMonth = 0;
-  let hourOffMonth = 0;
-  let prevMonth = -1;
-  let dailyTotals: DailyTotals = {};
-  let weeklyData: weeklyData = {};
-  let monthlyData: monthlyData = {};
+  let hourOn = 0,
+    hourOff = 0,
+    hourOnWeek = 0,
+    hourOffWeek = 0,
+    hourOnMonth = 0,
+    hourOffMonth = 0,
+    prevMonth = -1,
+    currDate: string = '',
+    energyNormal: number = 0,
+    energy: number = 0,
+    cuEnergy: number = 0,
+    daysPassed = 0;
 
-  interface DailyTotals {
-    [key: string]: {
-      date: string;
-      unitTotal: number;
-      priceTotal: number;
-      onPeak: {
-        unit: number;
-        hour: number;
-        price: number;
-      };
-      offPeak: {
-        unit: number;
-        hour: number;
-        price: number;
-      };
-    };
-  }
-  interface weeklyData {
-    [key: string]: {
-      date: string;
-      unitTotal: number;
-      priceTotal: number;
-      onPeak: {
-        unit: number;
-        hour: number;
-        price: number;
-      };
-      offPeak: {
-        unit: number;
-        hour: number;
-        price: number;
-      };
-    };
-  }
-  interface monthlyData {
-    [key: string]: {
-      date: string;
-      unitTotal: number;
-      priceTotal: number;
-      onPeak: {
-        unit: number;
-        hour: number;
-        price: number;
-      };
-      offPeak: {
-        unit: number;
-        hour: number;
-        price: number;
-      };
-      fee: number;
-      summary: number;
-    };
-  }
-  let daysPassed: number = 0;
+  let dailyTotals: Record<string, any> = {};
+  let weeklyData: Record<string, any> = {};
+  let monthlyData: Record<string, any> = {};
+
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
     const currentTime = new Date(item.datetime);
-    let curr = new Date(item.datetime);
-    let month = curr.getMonth();
-    let day = curr.getDay();
-    let hours = curr.getHours();
-    let minute = curr.getMinutes();
+    let curr = new Date(item.datetime),
+      month = curr.getMonth(),
+      day = curr.getDay(),
+      hours = curr.getHours(),
+      minute = curr.getMinutes();
     if (currentTime >= sd && currentTime <= ed) {
-      let monthKey = `${curr.getFullYear()}-${month + 1}`;
-
       let weekStart = new Date(
         curr.getFullYear(),
         curr.getMonth(),
         curr.getDate() - curr.getDay()
-      ); // วันเริ่มต้นของสัปดาห์
-      let weekKey = `${weekStart.toDateString()}`;
-      let dayKey = curr.toDateString();
+      );
+      let monthKey = `${curr.getFullYear()}-${month + 1}`,
+        weekKey = `${weekStart.toDateString()}`,
+        dayKey = curr.toDateString();
 
       if (hours == 0 && minute == 0) {
-        // รีเซ็ตตัวแปรเมื่อเปลี่ยนวัน
         hourOn = 0;
         hourOff = 0;
         daysPassed++;
@@ -416,10 +311,9 @@ export function getdataDayWeekMonth(
         }
       }
       if (month !== prevMonth) {
-        // กำหนดค่าเริ่มต้นของชั่วโมงใหม่เป็น 0 เมื่อเลขเดือนเปลี่ยน
         hourOnMonth = 0;
         hourOffMonth = 0;
-        prevMonth = month; // ปรับค่าเลขเดือนก่อนหน้าเป็นเลขเดือนปัจจุบัน
+        prevMonth = month;
       }
       let has = DATA_HOLIDAY.some(
         (o) =>
@@ -455,67 +349,61 @@ export function getdataDayWeekMonth(
         }
       }
 
-      if (!dailyTotals[dayKey]) {
-        dailyTotals[dayKey] = {
-          date: '',
-          unitTotal: 0,
-          priceTotal: 0,
-          onPeak: {
-            unit: 0,
-            hour: 0,
-            price: 0,
-          },
-          offPeak: {
-            unit: 0,
-            hour: 0,
-            price: 0,
-          },
-        };
-      }
+      dailyTotals[dayKey] ||= {
+        date: '',
+        unitTotal: 0,
+        priceTotal: 0,
+        onPeak: {
+          unit: 0,
+          hour: 0,
+          price: 0,
+        },
+        offPeak: {
+          unit: 0,
+          hour: 0,
+          price: 0,
+        },
+      };
 
-      if (!weeklyData[weekKey]) {
-        weeklyData[weekKey] = {
-          date: '',
-          unitTotal: 0,
-          priceTotal: 0,
-          onPeak: {
-            unit: 0,
-            hour: 0,
-            price: 0,
-          },
-          offPeak: {
-            unit: 0,
-            hour: 0,
-            price: 0,
-          },
-        };
-      }
+      weeklyData[weekKey] ||= {
+        date: '',
+        unitTotal: 0,
+        priceTotal: 0,
+        onPeak: {
+          unit: 0,
+          hour: 0,
+          price: 0,
+        },
+        offPeak: {
+          unit: 0,
+          hour: 0,
+          price: 0,
+        },
+      };
 
-      if (!monthlyData[monthKey]) {
-        monthlyData[monthKey] = {
-          date: '',
-          unitTotal: 0,
-          priceTotal: 0,
-          onPeak: {
-            unit: 0,
-            hour: 0,
-            price: 0,
-          },
-          offPeak: {
-            unit: 0,
-            hour: 0,
-            price: 0,
-          },
-          fee: 0,
-          summary: 0,
-        };
-      }
+      monthlyData[monthKey] ||= {
+        date: '',
+        unitTotal: 0,
+        priceTotal: 0,
+        onPeak: {
+          unit: 0,
+          hour: 0,
+          price: 0,
+        },
+        offPeak: {
+          unit: 0,
+          hour: 0,
+          price: 0,
+        },
+        fee: 0,
+        summary: 0,
+      };
+
       if (!currDate.length) {
         currDate = curr.toDateString();
       }
-      energyNomal = Number(item.energy);
+      energyNormal = Number(item.energy);
       if (i === 0) {
-        // หากเป็นข้อมูลแรกให้ลบกับ 0
         energy = item.energy - 0;
       } else {
         const previousItem = data[i - 1];
@@ -533,17 +421,18 @@ export function getdataDayWeekMonth(
           date: item.datetime,
           energy: energy,
         });
-
-        let unitTotal = calc.UnitTotal();
-        let priceTotal = calc.PriceTotal();
-        let unitOnpeak = calc.UnitOnPeak();
-        let priceOnpeak = calc.PriceOnPeak();
-        let unitOffpeak = calc.UnitOffPeack();
-        let priceOffpeak = calc.PriceOffPeak();
-        let unitHoliday = calc.UnitHoliday();
-        let priceHoliday = calc.PriceHoliday();
-        let fee = calc.Fee();
-
+        let {
+          unitTotal,
+          priceTotal,
+          unitOnpeak,
+          priceOnpeak,
+          unitOffpeak,
+          priceOffpeak,
+          unitHoliday,
+          priceHoliday,
+          fee,
+        } = calc.calculate();
+        
         let dateOnly = new Date(curr).toISOString().split('T')[0];
         dailyTotals[dayKey].date = dateOnly;
         dailyTotals[dayKey].unitTotal += unitTotal;
@@ -577,8 +466,8 @@ export function getdataDayWeekMonth(
         monthlyData[monthKey].fee = fee;
         monthlyData[monthKey].summary =
           monthlyData[monthKey].priceTotal + monthlyData[monthKey].fee;
-      } else if (hometype == 'Nomal') {
-        let calc = new MeterNomal({
+      } else if (hometype == 'Normal') {
+        let calc = new MeterNormal({
           id: 0,
           type: metertype,
           name: 'AAA',
@@ -586,9 +475,9 @@ export function getdataDayWeekMonth(
           energy: energy,
         });
 
-        let UnitTotal = calc.Unit();
-        let fee = calc.Fee();
-        let dateOnly = new Date(curr).toISOString().split('T')[0];
+        let UnitTotal = calc.Unit(),
+          fee = calc.Fee(),
+          dateOnly = new Date(curr).toISOString().split('T')[0];
 
         dailyTotals[dayKey].date = dateOnly;
         dailyTotals[dayKey].unitTotal += UnitTotal;
@@ -614,63 +503,13 @@ export function getdataDayWeekMonth(
     }
   }
   for (let dayKey in dailyTotals) {
-    let dailyTotal = dailyTotals[dayKey];
-    let newdailyTotal = {
-      date: dailyTotal.date,
-      unitTotal: parseFloat(dailyTotal.unitTotal.toFixed(2)),
-      priceTotal: parseFloat(dailyTotal.priceTotal.toFixed(2)),
-      onPeak: {
-        unit: parseFloat(dailyTotal.onPeak.unit.toFixed(2)),
-        hour: dailyTotal.onPeak.hour,
-        price: parseFloat(dailyTotal.onPeak.price.toFixed(2)),
-      },
-      offPeak: {
-        unit: parseFloat(dailyTotal.offPeak.unit.toFixed(2)),
-        hour: dailyTotal.offPeak.hour,
-        price: parseFloat(dailyTotal.offPeak.price.toFixed(2)),
-      },
-    };
-    DataDayWeekMonth.chartDay.push(newdailyTotal);
+    DataDayWeekMonth.chartDay.push(formatData(dailyTotals[dayKey]));
   }
   for (let weekKey in weeklyData) {
-    let weekTotal = weeklyData[weekKey];
-    let newweekTotal = {
-      date: weekTotal.date,
-      unitTotal: parseFloat(weekTotal.unitTotal.toFixed(2)),
-      priceTotal: parseFloat(weekTotal.priceTotal.toFixed(2)),
-      onPeak: {
-        unit: parseFloat(weekTotal.onPeak.unit.toFixed(2)),
-        hour: weekTotal.onPeak.hour,
-        price: parseFloat(weekTotal.onPeak.price.toFixed(2)),
-      },
-      offPeak: {
-        unit: parseFloat(weekTotal.offPeak.unit.toFixed(2)),
-        hour: weekTotal.offPeak.hour,
-        price: parseFloat(weekTotal.offPeak.price.toFixed(2)),
-      },
-    };
-    DataDayWeekMonth.chartWeek.push(newweekTotal);
+    DataDayWeekMonth.chartWeek.push(formatData(weeklyData[weekKey]));
   }
   for (let monthKey in monthlyData) {
-    let monthTotal = monthlyData[monthKey];
-    let newmonthTotal = {
-      date: monthTotal.date,
-      unitTotal: parseFloat(monthTotal.unitTotal.toFixed(2)),
-      priceTotal: parseFloat(monthTotal.priceTotal.toFixed(2)),
-      onPeak: {
-        unit: parseFloat(monthTotal.onPeak.unit.toFixed(2)),
-        hour: monthTotal.onPeak.hour,
-        price: parseFloat(monthTotal.onPeak.price.toFixed(2)),
-      },
-      offPeak: {
-        unit: parseFloat(monthTotal.offPeak.unit.toFixed(2)),
-        hour: monthTotal.offPeak.hour,
-        price: parseFloat(monthTotal.offPeak.price.toFixed(2)),
-      },
-      fee: monthTotal.fee,
-      summary: parseFloat(monthTotal.summary.toFixed(2)),
-    };
-    DataDayWeekMonth.chartMonth.push(newmonthTotal);
+    DataDayWeekMonth.chartMonth.push(formatData(monthlyData[monthKey]));
   }
   return DataDayWeekMonth;
 }
@@ -682,72 +521,52 @@ export function getdataMonth(
   hometype: string
 ) {
   DataMonth = [];
-  let currDate: string = '';
-  let energy: number = 0;
-  let cuEnergy: number = 0;
-  let energyNomal: number = 0;
-  const monthlyData: {
-    [month: string]: {
-      date: string;
-      unitTotal: number;
-      priceTotal: number;
-      onPeak: {
-        unit: number;
-        price: number;
-        hour: number;
-      };
-      offPeak: {
-        unit: number;
-        price: number;
-        hour: number;
-      };
-      fee: number;
-      summary: number;
-    };
-  } = {};
-  let hourOn = 0;
-  let hourOff = 0;
-  let prevMonth = -1;
+  const monthlyData: Record<string, any> = {};
+  let currDate: string = '',
+    energy: number = 0,
+    cuEnergy: number = 0,
+    energyNormal: number = 0,
+    hourOn = 0,
+    hourOff = 0,
+    prevMonth = -1;
+
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
     const currentTime = new Date(item.datetime);
-    let curr = new Date(item.datetime);
-    let month = curr.getMonth();
-    let day = curr.getDay();
-    let hours = curr.getHours();
-    let minute = curr.getMinutes();
+    let curr = new Date(item.datetime),
+      month = curr.getMonth(),
+      day = curr.getDay(),
+      hours = curr.getHours(),
+      minute = curr.getMinutes();
 
     if (currentTime >= sd && currentTime <= ed) {
       let monthKey = `${curr.getFullYear()}-${curr.getMonth() + 1}`;
 
-      if (!monthlyData[monthKey]) {
-        // ถ้ายังไม่มีให้สร้างโครงสร้างใหม่
-        monthlyData[monthKey] = {
-          date: '',
-          unitTotal: 0,
-          priceTotal: 0,
-          onPeak: {
-            unit: 0,
-            price: 0,
-            hour: 0,
-          },
-          offPeak: {
-            unit: 0,
-            price: 0,
-            hour: 0,
-          },
-          fee: 0,
-          summary: 0,
-        };
-      }
+      monthlyData[monthKey] ||= {
+        date: '',
+        unitTotal: 0,
+        priceTotal: 0,
+        onPeak: {
+          unit: 0,
+          price: 0,
+          hour: 0,
+        },
+        offPeak: {
+          unit: 0,
+          price: 0,
+          hour: 0,
+        },
+        fee: 0,
+        summary: 0,
+      };
+
       if (!currDate.length) {
         currDate = curr.toDateString();
       }
 
-      energyNomal = Number(item.energy);
+      energyNormal = Number(item.energy);
 
       if (i === 0) {
-        // หากเป็นข้อมูลแรกให้ลบกับ 0
         energy = item.energy - 0;
       } else {
         const previousItem = data[i - 1];
@@ -792,15 +611,15 @@ export function getdataMonth(
           date: item.datetime,
           energy: energy,
         });
-        let untiTotal = calc.Unit();
-        let unitPrice = calc.PriceTotal();
-        let onPeack = calc.PriceOnPeak();
-        let OffPeack = calc.PriceOffPeak();
-        let holiday = calc.PriceHoliday();
-        let unitOnpeak = calc.UnitOnPeak();
-        let unitOffpeak = calc.UnitOffPeack();
-        let unitHoliday = calc.UnitHoliday();
-        let fee = calc.Fee();
+        let untiTotal = calc.Unit(),
+          unitPrice = calc.PriceTotal(),
+          onPeack = calc.PriceOnPeak(),
+          OffPeack = calc.PriceOffPeak(),
+          holiday = calc.PriceHoliday(),
+          unitOnpeak = calc.UnitOnPeak(),
+          unitOffpeak = calc.UnitOffPeack(),
+          unitHoliday = calc.UnitHoliday(),
+          fee = calc.Fee();
 
         monthlyData[monthKey].unitTotal += untiTotal;
         monthlyData[monthKey].priceTotal += unitPrice;
@@ -813,16 +632,16 @@ export function getdataMonth(
         monthlyData[monthKey].fee = fee;
         monthlyData[monthKey].summary =
           monthlyData[monthKey].priceTotal + monthlyData[monthKey].fee;
-      } else if (hometype == 'Nomal') {
-        let calc = new MeterNomal({
+      } else if (hometype == 'Normal') {
+        let calc = new MeterNormal({
           id: 0,
           type: metertype,
           name: 'AAA',
           date: item.datetime,
           energy: energy,
         });
-        let unitTotal = calc.Unit();
-        let fee = calc.Fee();
+        let unitTotal = calc.Unit(),
+          fee = calc.Fee();
         monthlyData[monthKey].unitTotal += unitTotal;
         let priceTotal = calc.ElectricityBillBelow(
           monthlyData[monthKey].unitTotal
@@ -837,28 +656,11 @@ export function getdataMonth(
       monthlyData[monthKey].date = dateOnly;
     }
   }
-  for (let monthKey in monthlyData) {
-    let dataMonthTotal = monthlyData[monthKey];
-    let newDataMonthTotal = {
-      date: dataMonthTotal.date,
-      unitTotal: parseFloat(dataMonthTotal.unitTotal.toFixed(2)),
-      priceTotal: parseFloat(dataMonthTotal.priceTotal.toFixed(2)),
-      onPeak: {
-        unit: parseFloat(dataMonthTotal.onPeak.unit.toFixed(2)),
-        price: parseFloat(dataMonthTotal.onPeak.price.toFixed(2)),
-        hour: dataMonthTotal.onPeak.hour,
-      },
-      offPeak: {
-        unit: parseFloat(dataMonthTotal.offPeak.unit.toFixed(2)),
-        price: parseFloat(dataMonthTotal.offPeak.price.toFixed(2)),
-        hour: dataMonthTotal.offPeak.hour,
-      },
-      fee: parseFloat(dataMonthTotal.fee.toFixed(2)),
-      summary: parseFloat(dataMonthTotal.summary.toFixed(2)),
-    };
 
-    DataMonth.push(newDataMonthTotal);
+  for (let monthKey in monthlyData) {
+    DataMonth.push(formatData(monthlyData[monthKey]));
   }
+
   return DataMonth;
 }
 export function getCustomerById(id: string): Data | undefined {
@@ -867,4 +669,32 @@ export function getCustomerById(id: string): Data | undefined {
 export function getCustomerAll(): typeof customerData {
   return customerData;
 }
-
+function createMonthlyDataObject() {
+  return {
+    unit: 0,
+    priceTotal: 0,
+    onpeakTotal: 0,
+    offpeakTotal: 0,
+    fee: 0,
+    summary: 0,
+  };
+}
+function formatData(data: any) {
+  return {
+    date: data.date,
+    unitTotal: parseFloat(data.unitTotal.toFixed(2)),
+    priceTotal: parseFloat(data.priceTotal.toFixed(2)),
+    onPeak: {
+      unit: parseFloat(data.onPeak.unit.toFixed(2)),
+      hour: data.onPeak.hour,
+      price: parseFloat(data.onPeak.price.toFixed(2)),
+    },
+    offPeak: {
+      unit: parseFloat(data.offPeak.unit.toFixed(2)),
+      hour: data.offPeak.hour,
+      price: parseFloat(data.offPeak.price.toFixed(2)),
+    },
+    fee: data.fee ? parseFloat(data.fee.toFixed(2)) : 0,
+    summary: data.summary ? parseFloat(data.summary.toFixed(2)) : 0,
+  };
+}

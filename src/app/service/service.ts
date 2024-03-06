@@ -26,7 +26,7 @@ app.get('/getCurrentCost', (req: any, res: any) => {
     const defaultEndDate = new Date('2023-12-30 23:59:59');
     const defaultHomeType = 'TOU';
     const defaultMeterTypeTOU = '12-24';
-    const defaultMeterTypeNomal = 'below150';
+    const defaultMeterTypeNormal = 'below150';
 
     let metertype = req.query.metertype;
     let hometype = req.query.hometype;
@@ -37,8 +37,8 @@ app.get('/getCurrentCost', (req: any, res: any) => {
 
     if (!metertype && hometype === 'TOU') {
       metertype = defaultMeterTypeTOU;
-    } else if (!metertype && hometype === 'Nomal') {
-      metertype = defaultMeterTypeNomal;
+    } else if (!metertype && hometype === 'Normal') {
+      metertype = defaultMeterTypeNormal;
     }
     const result = getCurrentCost(data, sd, ed, metertype, hometype);
 
@@ -57,7 +57,7 @@ app.get('/getdataDayWeekMonth', (req: any, res: any) => {
     const defaultEndDate = new Date('2023-12-30 23:59:59');
     const defaultHomeType = 'TOU';
     const defaultMeterTypeTOU = '12-24';
-    const defaultMeterTypeNomal = 'below150';
+    const defaultMeterTypeNormal = 'below150';
 
     let metertype = req.query.metertype;
     let hometype = req.query.hometype;
@@ -67,8 +67,8 @@ app.get('/getdataDayWeekMonth', (req: any, res: any) => {
 
     if (!metertype && hometype === 'TOU') {
       metertype = defaultMeterTypeTOU;
-    } else if (!metertype && hometype === 'Nomal') {
-      metertype = defaultMeterTypeNomal;
+    } else if (!metertype && hometype === 'Normal') {
+      metertype = defaultMeterTypeNormal;
     }
 
     const result = getdataDayWeekMonth(data, sd, ed, metertype, hometype);
@@ -87,7 +87,7 @@ app.get('/getdataMonth', (req: any, res: any) => {
     const defaultEndDate = new Date('2023-12-30 23:59:59');
     const defaultHomeType = 'TOU';
     const defaultMeterTypeTOU = '12-24';
-    const defaultMeterTypeNomal = 'below150';
+    const defaultMeterTypeNormal = 'below150';
         
     let metertype = req.query.metertype;
     let hometype = req.query.hometype;
@@ -97,8 +97,8 @@ app.get('/getdataMonth', (req: any, res: any) => {
 
     if (!metertype && hometype === 'TOU') {
       metertype = defaultMeterTypeTOU;
-    } else if (!metertype && hometype === 'Nomal') {
-      metertype = defaultMeterTypeNomal;
+    } else if (!metertype && hometype === 'Normal') {
+      metertype = defaultMeterTypeNormal;
     }
     const result = getdataMonth(data, sd, ed, metertype, hometype);
     res.json(result);
