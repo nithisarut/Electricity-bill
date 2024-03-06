@@ -1,17 +1,12 @@
 import { MeterNomal, MeterTypeTOU } from './classMeter';
 import { DATA_HOLIDAY } from '../../assets/data_dayoff';
-const express = require('express');
-const app = express();
-const cors = require('cors');
 const fs = require('fs');
-app.use(cors());
 const powerData = JSON.parse(
   fs.readFileSync('../../assets/data_power_meter.json')
 );
 const customerData = JSON.parse(
   fs.readFileSync('../../assets/data_customer.json')
 );
-
 let sd = new Date('2023-01-01 00:0:00');
 let ed = new Date('2023-01-31 23:59:59');
 let data: any[] = powerData;
@@ -873,125 +868,3 @@ export function getCustomerAll(): typeof customerData {
   return customerData;
 }
 
-app.get('/getCurrentCost', (req: any, res: any) => {
-  try {
-    let sd: Date;
-    let ed: Date;
-    const defaultStartDate = new Date('2023-01-01 00:00:00');
-    const defaultEndDate = new Date('2023-12-30 23:59:59');
-    const defaultHomeType = 'TOU';
-    const defaultMeterTypeTOU = '12-24';
-    const defaultMeterTypeNomal = 'below150';
-    let metertype = req.query.metertype;
-    let hometype = req.query.hometype;
-    sd = req.query.sd ? new Date(req.query.sd + '00:00:00') : defaultStartDate;
-    ed = req.query.ed ? new Date(req.query.ed + '23:59:59') : defaultEndDate;
-
-    hometype = hometype || defaultHomeType;
-
-    if (!metertype && hometype === 'TOU') {
-      metertype = defaultMeterTypeTOU;
-    } else if (!metertype && hometype === 'Nomal') {
-      metertype = defaultMeterTypeNomal;
-    }
-    DataMonthTOU = [];
-    const result = getCurrentCost(data, sd, ed, metertype, hometype);
-
-    res.json(result);
-  } catch (error) {
-    console.error('An error occurred:', error);
-    res.status(500).json({ error: 'An error occurred' });
-  }
-});
-
-app.get('/getdataDayWeekMonth', (req: any, res: any) => {
-  try {
-    let sd: Date;
-    let ed: Date;
-    const defaultStartDate = new Date('2023-01-01 00:00:00');
-    const defaultEndDate = new Date('2023-12-30 23:59:59');
-    const defaultHomeType = 'TOU';
-    const defaultMeterTypeTOU = '12-24';
-    const defaultMeterTypeNomal = 'below150';
-
-    let metertype = req.query.metertype;
-    let hometype = req.query.hometype;
-    sd = req.query.sd ? new Date(req.query.sd + '00:00:00') : defaultStartDate;
-    ed = req.query.ed ? new Date(req.query.ed + '23:59:59') : defaultEndDate;
-    hometype = hometype || defaultHomeType;
-
-    if (!metertype && hometype === 'TOU') {
-      metertype = defaultMeterTypeTOU;
-    } else if (!metertype && hometype === 'Nomal') {
-      metertype = defaultMeterTypeNomal;
-    }
-    DataDayWeekMonth = {
-      chartDay: [],
-      chartWeek: [],
-      chartMonth: [],
-    };
-    const result = getdataDayWeekMonth(data, sd, ed, metertype, hometype);
-    res.json(result);
-  } catch (error) {
-    console.error('An error occurred:', error);
-    res.status(500).json({ error: 'An error occurred' });
-  }
-});
-app.get('/getdataMonth', (req: any, res: any) => {
-  try {
-    let sd: Date;
-    let ed: Date;
-    const defaultStartDate = new Date('2023-01-01 00:00:00');
-    const defaultEndDate = new Date('2023-12-30 23:59:59');
-    const defaultHomeType = 'TOU';
-    const defaultMeterTypeTOU = '12-24';
-    const defaultMeterTypeNomal = 'below150';
-
-    let metertype = req.query.metertype;
-    let hometype = req.query.hometype;
-    sd = req.query.sd ? new Date(req.query.sd + '00:00:00') : defaultStartDate;
-    ed = req.query.ed ? new Date(req.query.ed + '23:59:59') : defaultEndDate;
-    hometype = hometype || defaultHomeType;
-
-    if (!metertype && hometype === 'TOU') {
-      metertype = defaultMeterTypeTOU;
-    } else if (!metertype && hometype === 'Nomal') {
-      metertype = defaultMeterTypeNomal;
-    }
-    DataMonth = [];
-    const result = getdataMonth(data, sd, ed, metertype, hometype);
-    res.json(result);
-  } catch (error) {
-    console.error('An error occurred:', error);
-    res.status(500).json({ error: 'An error occurred' });
-  }
-});
-app.get('/getCustomerById', (req: any, res: any) => {
-  try {
-    let id: string;
-    const defaultCustomer = '1';
-    id = req.query.id ? req.query.id : defaultCustomer;
-    const result = getCustomerById(id);
-    if (result) {
-      res.json(result);
-    } else {
-      res.status(500).json('Customer not found');
-    }
-  } catch (error) {
-    console.error('An error occurred:', error);
-    res.status(500).json({ error: 'An error occurred' });
-  }
-});
-app.get('/getCustomerAll', (req: any, res: any) => {
-  try {
-    const result = getCustomerAll();
-    res.json(result);
-  } catch (error) {
-    console.error('An error occurred:', error);
-    res.status(500).json({ error: 'An error occurred' });
-  }
-});
-const PORT = process.env['PORT'] || 3002;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});

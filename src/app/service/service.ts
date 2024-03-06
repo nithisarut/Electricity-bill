@@ -31,8 +31,8 @@ app.get('/getCurrentCost', (req: any, res: any) => {
     let metertype = req.query.metertype;
     let hometype = req.query.hometype;
 
-    sd = req.query.sd ? new Date(req.query.sd + '00:00:00') : defaultStartDate;
-    ed = req.query.ed ? new Date(req.query.ed + '23:59:59') : defaultEndDate;
+    sd = req.query.sd ? (req.query.sd.includes(':') ? new Date(req.query.sd) : new Date(req.query.sd + ' 00:00:00')) : defaultStartDate;
+    ed = req.query.ed ? (req.query.ed.includes(':') ? new Date(req.query.ed) : new Date(req.query.ed + ' 23:59:59')) : defaultEndDate
     hometype = hometype || defaultHomeType;
 
     if (!metertype && hometype === 'TOU') {
@@ -61,8 +61,8 @@ app.get('/getdataDayWeekMonth', (req: any, res: any) => {
 
     let metertype = req.query.metertype;
     let hometype = req.query.hometype;
-    sd = req.query.sd ? new Date(req.query.sd + '00:00:00') : defaultStartDate;
-    ed = req.query.ed ? new Date(req.query.ed + '23:59:59') : defaultEndDate;
+    sd = req.query.sd ? (req.query.sd.includes(':') ? new Date(req.query.sd) : new Date(req.query.sd + ' 00:00:00')) : defaultStartDate
+    ed = req.query.ed ? (req.query.ed.includes(':') ? new Date(req.query.ed) : new Date(req.query.ed + ' 23:59:59')) : defaultEndDate
     hometype = hometype || defaultHomeType;
 
     if (!metertype && hometype === 'TOU') {
@@ -88,11 +88,11 @@ app.get('/getdataMonth', (req: any, res: any) => {
     const defaultHomeType = 'TOU';
     const defaultMeterTypeTOU = '12-24';
     const defaultMeterTypeNomal = 'below150';
-
+        
     let metertype = req.query.metertype;
     let hometype = req.query.hometype;
-    sd = req.query.sd ? new Date(req.query.sd + '00:00:00') : defaultStartDate;
-    ed = req.query.ed ? new Date(req.query.ed + '23:59:59') : defaultEndDate;
+    sd = req.query.sd ? (req.query.sd.includes(':') ? new Date(req.query.sd): new Date(req.query.sd + ' 00:00:00')) : defaultStartDate
+    ed = req.query.ed ? (req.query.ed.includes(':') ? new Date(req.query.ed): new Date(req.query.ed + ' 23:59:59')) : defaultEndDate
     hometype = hometype || defaultHomeType;
 
     if (!metertype && hometype === 'TOU') {
@@ -120,7 +120,6 @@ app.get('/getCustomerById', (req: any, res: any) => {
       res.status(500).json('Customer not found');
     }
   } catch (error) {
-    console.error('An error occurred:', error);
     res.status(500).json({ error: 'An error occurred' });
   }
 });
@@ -130,7 +129,6 @@ app.get('/getCustomerAll', (req: any, res: any) => {
     const result = getCustomerAll();
     res.json(result);
   } catch (error) {
-    console.error('An error occurred:', error);
     res.status(500).json({ error: 'An error occurred' });
   }
 });
